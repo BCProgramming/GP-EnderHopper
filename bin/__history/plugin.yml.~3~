@@ -1,0 +1,4 @@
+name: GriefPrevention Ender Hoppers
+main: com.BASeCamp.GPEnderHoppers.GPEnderHopper
+version: 1.9
+depend: GriefPrevention
