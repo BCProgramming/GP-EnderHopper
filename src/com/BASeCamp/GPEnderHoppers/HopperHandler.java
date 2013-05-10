@@ -1,6 +1,7 @@
 package com.BASeCamp.GPEnderHoppers;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import me.ryanhamshire.GriefPrevention.Claim;
@@ -15,12 +16,14 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.Inventory;
@@ -221,6 +224,12 @@ private static Vector[] offsets = new Vector[] {
 			}
 		}
 	}
+	@EventHandler
+	public void onPlayerItemHeldEvent(PlayerItemHeldEvent ev){
+		ev.getPlayer().sendMessage("Held:" + ev.getPlayer().getInventory().getItem(ev.getNewSlot()).getType().toString());
+		
+	}
+	@EventHandler
 	public void onBlockBreak(BlockBreakEvent ev){
 		if(ev.getBlock().getType().equals(Material.HOPPER)){
 			synchronized (this){
