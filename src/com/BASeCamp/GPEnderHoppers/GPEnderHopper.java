@@ -12,8 +12,17 @@ public class GPEnderHopper extends JavaPlugin {
 	
 	GriefPrevention gp = null;
 	HopperHandler hh = null;
+	HopperCommand hc = null;
 	public Configuration cfg = null;
 	public static Logger log = Logger.getLogger("Minecraft");
+	
+	
+	@Override
+	public void onDisable(){
+		if(hh!=null)
+			hh.saveData();
+	}
+	
 	@Override
 	public void onEnable(){
 		log.info("GPEnderHopper Loading...");
@@ -33,6 +42,12 @@ public class GPEnderHopper extends JavaPlugin {
 		//register for Hopper Events.
 		hh = new HopperHandler(this);
 		Bukkit.getPluginManager().registerEvents(hh, this);
+		
+		hc = new HopperCommand(this);
+		getCommand("claimecpull").setExecutor(hc);
+		getCommand("claimecpush").setExecutor(hc);
+		
+		
 	}
 	
 

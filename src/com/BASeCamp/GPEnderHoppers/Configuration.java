@@ -23,11 +23,7 @@ public class Configuration {
 		EnderHopperDelayTicks = config.getInt("EnderHoppers.DelayTicks",3*20);
 		outConfig.set("EnderHoppers.DelayTicks", EnderHopperDelayTicks);
 		System.out.println("EnderHopper Delay Ticks" + EnderHopperDelayTicks);
-		WhiteList = config.getStringList("EnderHoppers.WhiteList");
-		if(WhiteList==null) WhiteList = new ArrayList<String>();
-		
-		outConfig.set("EnderHoppers.WhiteList", WhiteList);
-		System.out.println("Whitelist count:" + WhiteList.size());
+
 		try {
 			outConfig.save(configFilePath);
 			

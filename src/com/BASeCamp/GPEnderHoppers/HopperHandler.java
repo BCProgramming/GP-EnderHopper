@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -34,8 +35,20 @@ import org.bukkit.util.Vector;
 
 
 public class HopperHandler implements Listener,Runnable{
+	public HashMap<Long,ClaimData> HopperClaims = new HashMap<Long,ClaimData>();
 	private GPEnderHopper Owner = null;
 	public GPEnderHopper getOwner(){return Owner;}
+	public ClaimData getHopperData(Claim c){
+		
+		if(c.parent!=null) return getHopperData(c.parent);
+		
+		if(!HopperClaims.containsKey(c.getID())){
+			HopperClaims.put(c.getID(), new ClaimData(Owner,c.getID()));
+		}
+		return HopperClaims.get(c.getID());
+		
+		
+	}
 	public HopperHandler(GPEnderHopper pOwner){
 		Owner=pOwner;
 		//schedule a repeating task to complete, we will perform logic on all Ender chests.
@@ -55,12 +68,33 @@ public class HopperHandler implements Listener,Runnable{
 			}
 			
 		}
+		//read in Data.
+		//iterate through all claims.
+		
+		Bukkit.getScheduler().runTaskLater(Owner, new Runnable(){
+		public void run(){
+		for(int i=0;i<Owner.gp.dataStore.getClaimArray().size();i++){
+			Claim currclaim = Owner.gp.dataStore.getClaimArray().get(i);
+			if(currclaim.parent==null){
+				System.out.println("reading in:" + currclaim.getID());
+			    HopperClaims.put(currclaim.getID(),new ClaimData(Owner,currclaim.getID()));
+			
+			}
+			
+		}
+		
+		}
+		},20);
+		
+		
+		
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.cfg.EnderHopperDelayTicks);
 	}
 	public void run(){
 		//System.out.println("HopperHandler...");
 		//implementation of Runnable for RepeatingSync Task.
-		//Iterate through all Hoppers...
+		//Iterate through all Hoppers
+		try {
 		Claim cachedClaim=null;
 		synchronized (this){
 		for(Hopper iterateHopper:iteratehoppers){
@@ -79,22 +113,32 @@ public class HopperHandler implements Listener,Runnable{
 			//if there is room.
 			Block inputblock = getHopperInput(iterateHopper);
 			Block outputblock = getHopperOutput(iterateHopper);
-			//System.out.println("inputblock material:" + inputblock.getType().toString());
-			//System.out.println("outputblock material:" + outputblock.getType().toString());
+			System.out.println("inputblock material:" + inputblock.getType().toString());
+			System.out.println("outputblock material:" + outputblock.getType().toString());
 			if(inputblock!=null && inputblock.getType().equals(Material.ENDER_CHEST)){
 				
 				//is it inside a claim?
 				cachedClaim = Owner.gp.dataStore.getClaimAt(inputblock.getLocation(), true, cachedClaim);
+				
 				if(cachedClaim!=null){
+					
+					//grab this claim's data.
+					ClaimData cd = Owner.hh.getHopperData(cachedClaim);
+					//System.out.println( "pull: " + cd.getHopperPush());
+					if(!cd.getHopperPush()) continue;
 					//get the claim Owner...
 					String pOwner = cachedClaim.ownerName;
-					//continue if there is a white and the player is not allowed. 
-					if(Owner.cfg.WhiteList.size()==0 || Owner.cfg.WhiteList.contains(pOwner)){
+					//continue if there is a white and the player is not allowed.
 					Player gotPlayer = Bukkit.getPlayer(pOwner);
+					
+					
+					Inventory ih=null;
+					
 				    if(gotPlayer!=null){
-				    	Inventory ih =  gotPlayer.getEnderChest();
+				    	ih =  gotPlayer.getEnderChest();
 				    	if(ih!=null){
 					    	//get first item.
+				    		//System.out.println("EnderChest has " + HopperInventory.getSize() + " Items");
 					    	ItemStack firstItem=null;
 					    	if(ih.getSize()>0){
 					    	for(ItemStack iterate:ih){
@@ -105,6 +149,7 @@ public class HopperHandler implements Listener,Runnable{
 					    		}
 					    	}
 					    	if(firstItem!=null){
+					    		//System.out.println("moved item " + firstItem.getType().toString() + "from Enderchest to Hopper");
 					    		//make sure there is room!
 					    		HashMap<Integer, ItemStack> result = 
 					    				iterateHopper.getInventory().addItem(firstItem);
@@ -118,17 +163,21 @@ public class HopperHandler implements Listener,Runnable{
 					    	}
 				    	}
 				    } //gotplayer!=null
-				} //whitelist check
+				
 				} //cachedClaim!=null
 			}
     		if(outputblock!=null && outputblock.getType().equals(Material.ENDER_CHEST)){
-				
+				System.out.println("output Enderchest");
 				//is it inside a claim?
 				cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(),true,cachedClaim);
-				if(cachedClaim!=null){
+				if(cachedClaim!=null ){
+					ClaimData cd = Owner.hh.getHopperData(cachedClaim);
+					System.out.println( "Pull: " + cd.getHopperPull());
+					if(!cd.getHopperPull()) continue;
+					
 					//get the claim owner...
 					String pOwner = cachedClaim.ownerName;
-					if(Owner.cfg.WhiteList.size()==0 || Owner.cfg.WhiteList.contains(pOwner)){
+					
 						
 					Player gotPlayer = Bukkit.getPlayer(pOwner);
 					if(gotPlayer!=null){
@@ -136,6 +185,7 @@ public class HopperHandler implements Listener,Runnable{
 						if(ih!=null){
 							ItemStack firstItem=null;
 							//we want to try to add an item from the hopper.
+							//System.out.println("Hopper has " + HopperInventory.getSize() + " Items");
 							if(HopperInventory.getSize()>0){
 								for(ItemStack hopperitem:HopperInventory){
 									if(hopperitem!=null)
@@ -145,16 +195,19 @@ public class HopperHandler implements Listener,Runnable{
 										break;
 									}
 								}
+								if(firstItem!=null){
+									//System.out.println("moved item " + firstItem.getType().toString() + "from Hopper to EnderChest");
 								HashMap<Integer,ItemStack> result = 
 										ih.addItem(firstItem);
 								//if it went through, remove it from the hopper.
 								if(result.isEmpty()){
 									iterateHopper.getInventory().removeItem(firstItem);
 								}
+								}
 							}
 						}
 					}
-				}
+				
 				}
 			}
 		}
@@ -168,7 +221,10 @@ public class HopperHandler implements Listener,Runnable{
 			exx.printStackTrace();
 		}
 		}
-		} //synchronized
+		}}
+		catch(ConcurrentModificationException cme){
+			
+		}
 		
 		
 		
@@ -225,11 +281,6 @@ private static Vector[] offsets = new Vector[] {
 		}
 	}
 	@EventHandler
-	public void onPlayerItemHeldEvent(PlayerItemHeldEvent ev){
-		ev.getPlayer().sendMessage("Held:" + ev.getPlayer().getInventory().getItem(ev.getNewSlot()).getType().toString());
-		
-	}
-	@EventHandler
 	public void onBlockBreak(BlockBreakEvent ev){
 		if(ev.getBlock().getType().equals(Material.HOPPER)){
 			synchronized (this){
@@ -261,6 +312,13 @@ private static Vector[] offsets = new Vector[] {
 		
 	}
 	
+	}
+	public void saveData() {
+		// TODO Auto-generated method stub
+		for(ClaimData c:HopperClaims.values()){
+			c.Save();
+		}
+		
 	}
 	
 
