@@ -76,7 +76,7 @@ public class HopperHandler implements Listener,Runnable{
 		for(int i=0;i<Owner.gp.dataStore.getClaimArray().size();i++){
 			Claim currclaim = Owner.gp.dataStore.getClaimArray().get(i);
 			if(currclaim.parent==null){
-				System.out.println("reading in:" + currclaim.getID());
+				//System.out.println("reading in:" + currclaim.getID());
 			    HopperClaims.put(currclaim.getID(),new ClaimData(Owner,currclaim.getID()));
 			
 			}
@@ -113,8 +113,8 @@ public class HopperHandler implements Listener,Runnable{
 			//if there is room.
 			Block inputblock = getHopperInput(iterateHopper);
 			Block outputblock = getHopperOutput(iterateHopper);
-			System.out.println("inputblock material:" + inputblock.getType().toString());
-			System.out.println("outputblock material:" + outputblock.getType().toString());
+		//	System.out.println("inputblock material:" + inputblock.getType().toString());
+		//	System.out.println("outputblock material:" + outputblock.getType().toString());
 			if(inputblock!=null && inputblock.getType().equals(Material.ENDER_CHEST)){
 				
 				//is it inside a claim?
@@ -167,12 +167,12 @@ public class HopperHandler implements Listener,Runnable{
 				} //cachedClaim!=null
 			}
     		if(outputblock!=null && outputblock.getType().equals(Material.ENDER_CHEST)){
-				System.out.println("output Enderchest");
+			//	System.out.println("output Enderchest");
 				//is it inside a claim?
 				cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(),true,cachedClaim);
 				if(cachedClaim!=null ){
 					ClaimData cd = Owner.hh.getHopperData(cachedClaim);
-					System.out.println( "Pull: " + cd.getHopperPull());
+			//		System.out.println( "Pull: " + cd.getHopperPull());
 					if(!cd.getHopperPull()) continue;
 					
 					//get the claim owner...

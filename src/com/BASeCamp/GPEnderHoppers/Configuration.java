@@ -22,7 +22,7 @@ public class Configuration {
 		FileConfiguration outConfig = new YamlConfiguration();
 		EnderHopperDelayTicks = config.getInt("EnderHoppers.DelayTicks",3*20);
 		outConfig.set("EnderHoppers.DelayTicks", EnderHopperDelayTicks);
-		System.out.println("EnderHopper Delay Ticks" + EnderHopperDelayTicks);
+		//System.out.println("EnderHopper Delay Ticks" + EnderHopperDelayTicks);
 
 		try {
 			outConfig.save(configFilePath);
