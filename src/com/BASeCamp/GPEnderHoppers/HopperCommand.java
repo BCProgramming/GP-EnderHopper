@@ -9,8 +9,14 @@ import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.Messages;
 import me.ryanhamshire.GriefPrevention.PlayerData;
 import me.ryanhamshire.GriefPrevention.TextMode;
+import nl.rutgerkok.betterenderchest.BetterEnderChest;
+import nl.rutgerkok.betterenderchest.BetterEnderChestPlugin.PublicChest;
+import nl.rutgerkok.betterenderchest.chestprotection.ProtectionBridge;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,6 +33,7 @@ public class HopperCommand implements CommandExecutor{
 	public HopperCommand(GPEnderHopper pOwner){
 		Owner = pOwner;
 	}
+	
 	
 	@Override
 	public boolean onCommand(CommandSender arg0, Command arg1, String arg2,

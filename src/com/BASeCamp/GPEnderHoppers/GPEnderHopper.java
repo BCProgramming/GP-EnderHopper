@@ -2,6 +2,7 @@ package com.BASeCamp.GPEnderHoppers;
 import java.util.logging.Logger;
 
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import nl.rutgerkok.betterenderchest.BetterEnderChest;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
@@ -14,6 +15,7 @@ public class GPEnderHopper extends JavaPlugin {
 	HopperHandler hh = null;
 	HopperCommand hc = null;
 	public Configuration cfg = null;
+	public BetterEnderChest becPlugin = null;
 	public static Logger log = Logger.getLogger("Minecraft");
 	
 	
@@ -31,6 +33,10 @@ public class GPEnderHopper extends JavaPlugin {
 				gp = (GriefPrevention)p;
 				log.info("GPEnderHopper:GriefPrevention found!");
 				break;
+			}
+			else if(p instanceof BetterEnderChest){
+				log.info("GPEnderHopper:BetterEnderChest Found!");
+				becPlugin = (BetterEnderChest) p;
 			}
 		}
 		

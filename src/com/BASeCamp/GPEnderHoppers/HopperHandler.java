@@ -3,9 +3,15 @@ import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
+import nl.rutgerkok.betterenderchest.BetterEnderChest;
+import nl.rutgerkok.betterenderchest.WorldGroup;
+import nl.rutgerkok.betterenderchest.BetterEnderChestPlugin.PublicChest;
+import nl.rutgerkok.betterenderchest.chestprotection.ProtectionBridge;
+import nl.rutgerkok.betterenderchest.io.Consumer;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -35,7 +41,7 @@ import org.bukkit.util.Vector;
 
 
 public class HopperHandler implements Listener,Runnable{
-	public HashMap<Long,ClaimData> HopperClaims = new HashMap<Long,ClaimData>();
+	public ConcurrentHashMap<Long,ClaimData> HopperClaims = new ConcurrentHashMap<Long,ClaimData>();
 	private GPEnderHopper Owner = null;
 	public GPEnderHopper getOwner(){return Owner;}
 	public ClaimData getHopperData(Claim c){
@@ -90,6 +96,57 @@ public class HopperHandler implements Listener,Runnable{
 		
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.cfg.EnderHopperDelayTicks);
 	}
+	//based on the BetterEnderChest Source code in BEC's Event Handler
+	private String getInventoryName(String pPlayer,Block clickedBlock){
+		String inventoryName = pPlayer;
+		Player grabPlayer = Bukkit.getPlayer(pPlayer);
+		
+		if(Owner.becPlugin==null) return pPlayer;
+		// Find out the inventory that should be opened
+        ProtectionBridge protectionBridge = Owner.becPlugin.getProtectionBridges().getSelectedRegistration();
+        if (protectionBridge.isProtected(clickedBlock)) {
+            // Protected Ender Chest
+            if (protectionBridge.canAccess(grabPlayer, clickedBlock)) {
+                // player can access the chest
+                if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
+                    // and has the correct permission node
+
+                    // Get the owner's name
+                    inventoryName = protectionBridge.getOwnerName(clickedBlock);
+                } else {
+                    // Show an error
+                    //player.sendMessage("" + ChatColor.RED + Translations.NO_PERMISSION);
+                }
+            }
+        } else {
+            // Unprotected Ender chest
+           
+                // Don't cancel Lockette's sign placement
+                if (PublicChest.openOnOpeningUnprotectedChest) {
+                    // Get public chest
+                    if (grabPlayer.hasPermission("betterenderchest.user.open.publicchest")) {
+                        inventoryName = BetterEnderChest.PUBLIC_CHEST_NAME;
+                    
+                } else {
+                    // Get player's name
+                    if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
+                        inventoryName = grabPlayer.getName();
+                    }
+                }
+            
+        }
+
+
+		
+		
+		
+		
+		
+	}
+	return inventoryName;
+	}
+	
+	private Inventory ih = null;
 	public void run(){
 		//System.out.println("HopperHandler...");
 		//implementation of Runnable for RepeatingSync Task.
@@ -132,10 +189,32 @@ public class HopperHandler implements Listener,Runnable{
 					Player gotPlayer = Bukkit.getPlayer(pOwner);
 					
 					
-					Inventory ih=null;
 					
-				    if(gotPlayer!=null){
-				    	ih =  gotPlayer.getEnderChest();
+					
+				    if(gotPlayer!=null || Owner.becPlugin!=null){
+				    	//if bec is available, grab that players BEC Chest, instead of the default.
+				    	if(Owner.becPlugin!=null){
+				    		String InventoryName = getInventoryName(pOwner,inputblock);
+				    		WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
+				    	Owner.becPlugin.getChestCache().getInventory(InventoryName, wg, 
+				    			new Consumer<Inventory>() {
+				    		@Override
+				    		public void consume(Inventory i){
+				    			ih =i;
+				    		}
+				    	});
+				    	}
+				    	else{
+				    	   ih = gotPlayer.getEnderChest();	
+				    		
+				    	}
+				    
+				    			
+				    
+				    
+				    	
+				    	
+				    	
 				    	if(ih!=null){
 					    	//get first item.
 				    		//System.out.println("EnderChest has " + HopperInventory.getSize() + " Items");
@@ -149,6 +228,7 @@ public class HopperHandler implements Listener,Runnable{
 					    		}
 					    	}
 					    	if(firstItem!=null){
+					    		System.out.println("Moving item:" + firstItem.getType().name());
 					    		//System.out.println("moved item " + firstItem.getType().toString() + "from Enderchest to Hopper");
 					    		//make sure there is room!
 					    		HashMap<Integer, ItemStack> result = 
@@ -180,8 +260,26 @@ public class HopperHandler implements Listener,Runnable{
 					
 						
 					Player gotPlayer = Bukkit.getPlayer(pOwner);
-					if(gotPlayer!=null){
-						Inventory ih = gotPlayer.getEnderChest();
+					if(gotPlayer!=null || Owner.becPlugin!=null){
+						
+						if(Owner.becPlugin!=null){
+							String inventoryName = getInventoryName(pOwner,outputblock);
+				    		WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
+				    	Owner.becPlugin.getChestCache().getInventory(inventoryName, wg, 
+				    			new Consumer<Inventory>() {
+				    		@Override
+				    		public void consume(Inventory i){
+				    			ih =i;
+				    		}
+				    	});
+				    	}
+				    	else{
+				    	   ih = gotPlayer.getEnderChest();	
+				    		
+				    	}
+						
+						
+						
 						if(ih!=null){
 							ItemStack firstItem=null;
 							//we want to try to add an item from the hopper.
@@ -196,7 +294,8 @@ public class HopperHandler implements Listener,Runnable{
 									}
 								}
 								if(firstItem!=null){
-									//System.out.println("moved item " + firstItem.getType().toString() + "from Hopper to EnderChest");
+									//System.out.println("Moving item:" + firstItem.getType().name());
+									
 								HashMap<Integer,ItemStack> result = 
 										ih.addItem(firstItem);
 								//if it went through, remove it from the hopper.
@@ -250,6 +349,7 @@ private static Vector[] offsets = new Vector[] {
 	new Vector(0,-1,0),
 	new Vector(0,0,1),
 	new Vector(0,0,-1),
+	null,
 	new Vector(-1,0,0),
 	new Vector(1,0,0)
 };
