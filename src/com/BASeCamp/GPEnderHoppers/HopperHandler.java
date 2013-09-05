@@ -1,8 +1,8 @@
 package com.BASeCamp.GPEnderHoppers;
 
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 import nl.rutgerkok.betterenderchest.BetterEnderChest;
@@ -41,13 +41,10 @@ public class HopperHandler implements Listener, Runnable {
         // schedule a repeating task to complete, we will perform logic on all
         // Ender chests.
         for (World w : Bukkit.getWorlds()) {
-
             for (Chunk c : w.getLoadedChunks()) {
                 for (BlockState te : c.getTileEntities()) {
                     if (te instanceof Hopper) {
-                        synchronized (iteratehoppers) {
-                            iteratehoppers.add((Hopper) te);
-                        }
+                        iteratehoppers.add((Hopper) te);
                     }
                 }
 
@@ -59,6 +56,7 @@ public class HopperHandler implements Listener, Runnable {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.config.getInt("EnderHoppers.DelayTicks", 60));
     }
+
     // based on the BetterEnderChest Source code in BEC's Event Handler
     private String getInventoryName(String pPlayer, Block clickedBlock) {
         if (Owner.becPlugin == null)
@@ -100,182 +98,173 @@ public class HopperHandler implements Listener, Runnable {
         // System.out.println("HopperHandler...");
         // implementation of Runnable for RepeatingSync Task.
         // Iterate through all Hoppers
-        try {
-            Claim cachedClaim = null;
-            synchronized (this) {
-                for (Hopper iterateHopper : iteratehoppers) {
-                    try {
-                        if (iterateHopper == null)
+
+        Claim cachedClaim = null;
+        for (Hopper iterateHopper : iteratehoppers) {
+            try {
+                if (iterateHopper == null)
+                    continue;
+                if (iterateHopper.getInventory() == null)
+                    continue;
+                Inventory HopperInventory = iterateHopper.getInventory();
+
+                if (iterateHopper.getBlock().isBlockPowered())
+                    continue; // powered hoppers do not accept or send
+                              // items.
+                // if the input is a Ender Chest
+                // if the hopper is in a claim
+                // take an item from the Ender inventory of the claim
+                // owner and put it in the hopper if there is room.
+                // if The hopper is pointing at a Ender chest
+                // and if the hopper is in a claim
+                // take an item from the Hopper and put it into the
+                // Ender inventory of the claim owner
+                // if there is room.
+                Block inputblock = getHopperInput(iterateHopper);
+                Block outputblock = getHopperOutput(iterateHopper);
+                // System.out.println("inputblock material:" +
+                // inputblock.getType().toString());
+                // System.out.println("outputblock material:" +
+                // outputblock.getType().toString());
+                if (inputblock != null && inputblock.getType().equals(Material.ENDER_CHEST)) {
+
+                    // is it inside a claim?
+                    cachedClaim = Owner.gp.dataStore.getClaimAt(inputblock.getLocation(), true, cachedClaim);
+
+                    if (cachedClaim != null) {
+
+                        // grab this claim's data.
+                        ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
+                        // System.out.println( "pull: " +
+                        // cd.getHopperPush());
+                        if (!cd.getHopperPush())
                             continue;
-                        if (iterateHopper.getInventory() == null)
-                            continue;
-                        Inventory HopperInventory = iterateHopper.getInventory();
+                        // get the claim Owner...
+                        String pOwner = cachedClaim.ownerName;
+                        // continue if there is a white and the player
+                        // is not allowed.
+                        Player gotPlayer = Bukkit.getPlayer(pOwner);
 
-                        if (iterateHopper.getBlock().isBlockPowered())
-                            continue; // powered hoppers do not accept or send
-                                      // items.
-                        // if the input is a Ender Chest
-                        // if the hopper is in a claim
-                        // take an item from the Ender inventory of the claim
-                        // owner and put it in the hopper if there is room.
-                        // if The hopper is pointing at a Ender chest
-                        // and if the hopper is in a claim
-                        // take an item from the Hopper and put it into the
-                        // Ender inventory of the claim owner
-                        // if there is room.
-                        Block inputblock = getHopperInput(iterateHopper);
-                        Block outputblock = getHopperOutput(iterateHopper);
-                        // System.out.println("inputblock material:" +
-                        // inputblock.getType().toString());
-                        // System.out.println("outputblock material:" +
-                        // outputblock.getType().toString());
-                        if (inputblock != null && inputblock.getType().equals(Material.ENDER_CHEST)) {
-
-                            // is it inside a claim?
-                            cachedClaim = Owner.gp.dataStore.getClaimAt(inputblock.getLocation(), true, cachedClaim);
-
-                            if (cachedClaim != null) {
-
-                                // grab this claim's data.
-                                ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
-                                // System.out.println( "pull: " +
-                                // cd.getHopperPush());
-                                if (!cd.getHopperPush())
-                                    continue;
-                                // get the claim Owner...
-                                String pOwner = cachedClaim.ownerName;
-                                // continue if there is a white and the player
-                                // is not allowed.
-                                Player gotPlayer = Bukkit.getPlayer(pOwner);
-
-                                if (gotPlayer != null || Owner.becPlugin != null) {
-                                    // if bec is available, grab that players
-                                    // BEC Chest, instead of the default.
-                                    if (Owner.becPlugin != null) {
-                                        String InventoryName = getInventoryName(pOwner, inputblock);
-                                        WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
-                                        Owner.becPlugin.getChestCache().getInventory(InventoryName, wg, new Consumer<Inventory>() {
-                                            @Override
-                                            public void consume(Inventory i) {
-                                                ih = i;
-                                            }
-                                        });
-                                    } else {
-                                        ih = gotPlayer.getEnderChest();
-
+                        if (gotPlayer != null || Owner.becPlugin != null) {
+                            // if bec is available, grab that players
+                            // BEC Chest, instead of the default.
+                            if (Owner.becPlugin != null) {
+                                String InventoryName = getInventoryName(pOwner, inputblock);
+                                WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
+                                Owner.becPlugin.getChestCache().getInventory(InventoryName, wg, new Consumer<Inventory>() {
+                                    @Override
+                                    public void consume(Inventory i) {
+                                        ih = i;
                                     }
+                                });
+                            } else {
+                                ih = gotPlayer.getEnderChest();
 
-                                    if (ih != null) {
-                                        // get first item.
-                                        // System.out.println("EnderChest has "
-                                        // + HopperInventory.getSize() +
-                                        // " Items");
-                                        ItemStack firstItem = null;
-                                        if (ih.getSize() > 0) {
-                                            for (ItemStack iterate : ih) {
-                                                if (iterate != null) {
-                                                    firstItem = new ItemStack(iterate.clone());
-                                                    firstItem.setAmount(1);
-                                                    break;
-                                                }
-                                            }
-                                            if (firstItem != null) {
-                                                System.out.println("Moving item:" + firstItem.getType().name());
-                                                // System.out.println("moved item "
-                                                // +
-                                                // firstItem.getType().toString()
-                                                // +
-                                                // "from Enderchest to Hopper");
-                                                // make sure there is room!
-                                                HashMap<Integer, ItemStack> result = iterateHopper.getInventory().addItem(firstItem);
-                                                // if we were able to add it,
-                                                // remove it from the Ender
-                                                // chest contents.
-                                                if (result.isEmpty())
-                                                    ih.removeItem(firstItem);
+                            }
 
-                                            } // firstItem!=null
+                            if (ih != null) {
+                                // get first item.
+                                // System.out.println("EnderChest has "
+                                // + HopperInventory.getSize() +
+                                // " Items");
+                                ItemStack firstItem = null;
+                                if (ih.getSize() > 0) {
+                                    for (ItemStack iterate : ih) {
+                                        if (iterate != null) {
+                                            firstItem = new ItemStack(iterate.clone());
+                                            firstItem.setAmount(1);
+                                            break;
                                         }
                                     }
-                                } // gotplayer!=null
+                                    if (firstItem != null) {
+                                        System.out.println("Moving item:" + firstItem.getType().name());
+                                        // System.out.println("moved item "
+                                        // +
+                                        // firstItem.getType().toString()
+                                        // +
+                                        // "from Enderchest to Hopper");
+                                        // make sure there is room!
+                                        HashMap<Integer, ItemStack> result = iterateHopper.getInventory().addItem(firstItem);
+                                        // if we were able to add it,
+                                        // remove it from the Ender
+                                        // chest contents.
+                                        if (result.isEmpty())
+                                            ih.removeItem(firstItem);
 
-                            } // cachedClaim!=null
-                        }
-                        if (outputblock != null && outputblock.getType().equals(Material.ENDER_CHEST)) {
-                            // System.out.println("output Enderchest");
-                            // is it inside a claim?
-                            cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(), true, cachedClaim);
-                            if (cachedClaim != null) {
-                                ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
-                                // System.out.println( "Pull: " +
-                                // cd.getHopperPull());
-                                if (!cd.getHopperPull())
-                                    continue;
+                                    } // firstItem!=null
+                                }
+                            }
+                        } // gotplayer!=null
 
-                                // get the claim owner...
-                                String pOwner = cachedClaim.ownerName;
+                    } // cachedClaim!=null
+                }
+                if (outputblock != null && outputblock.getType().equals(Material.ENDER_CHEST)) {
+                    // System.out.println("output Enderchest");
+                    // is it inside a claim?
+                    cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(), true, cachedClaim);
+                    if (cachedClaim != null) {
+                        ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
+                        // System.out.println( "Pull: " +
+                        // cd.getHopperPull());
+                        if (!cd.getHopperPull())
+                            continue;
 
-                                Player gotPlayer = Bukkit.getPlayer(pOwner);
-                                if (gotPlayer != null || Owner.becPlugin != null) {
+                        // get the claim owner...
+                        String pOwner = cachedClaim.ownerName;
 
-                                    if (Owner.becPlugin != null) {
-                                        String inventoryName = getInventoryName(pOwner, outputblock);
-                                        WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
-                                        Owner.becPlugin.getChestCache().getInventory(inventoryName, wg, new Consumer<Inventory>() {
-                                            @Override
-                                            public void consume(Inventory i) {
-                                                ih = i;
-                                            }
-                                        });
-                                    } else {
-                                        ih = gotPlayer.getEnderChest();
+                        Player gotPlayer = Bukkit.getPlayer(pOwner);
+                        if (gotPlayer != null || Owner.becPlugin != null) {
 
+                            if (Owner.becPlugin != null) {
+                                String inventoryName = getInventoryName(pOwner, outputblock);
+                                WorldGroup wg = Owner.becPlugin.getWorldGroupManager().getGroupByWorld(inputblock.getLocation().getWorld());
+                                Owner.becPlugin.getChestCache().getInventory(inventoryName, wg, new Consumer<Inventory>() {
+                                    @Override
+                                    public void consume(Inventory i) {
+                                        ih = i;
                                     }
+                                });
+                            } else {
+                                ih = gotPlayer.getEnderChest();
 
-                                    if (ih != null) {
-                                        ItemStack firstItem = null;
-                                        // we want to try to add an item from
-                                        // the hopper.
-                                        // System.out.println("Hopper has " +
-                                        // HopperInventory.getSize() +
-                                        // " Items");
-                                        if (HopperInventory.getSize() > 0) {
-                                            for (ItemStack hopperitem : HopperInventory) {
-                                                if (hopperitem != null) {
-                                                    firstItem = hopperitem.clone();
-                                                    firstItem.setAmount(1);
-                                                    break;
-                                                }
-                                            }
-                                            if (firstItem != null) {
-                                                // System.out.println("Moving item:"
-                                                // +
-                                                // firstItem.getType().name());
+                            }
 
-                                                HashMap<Integer, ItemStack> result = ih.addItem(firstItem);
-                                                // if it went through, remove it
-                                                // from the hopper.
-                                                if (result.isEmpty()) {
-                                                    iterateHopper.getInventory().removeItem(firstItem);
-                                                }
-                                            }
+                            if (ih != null) {
+                                ItemStack firstItem = null;
+                                // we want to try to add an item from
+                                // the hopper.
+                                // System.out.println("Hopper has " +
+                                // HopperInventory.getSize() +
+                                // " Items");
+                                if (HopperInventory.getSize() > 0) {
+                                    for (ItemStack hopperitem : HopperInventory) {
+                                        if (hopperitem != null) {
+                                            firstItem = hopperitem.clone();
+                                            firstItem.setAmount(1);
+                                            break;
+                                        }
+                                    }
+                                    if (firstItem != null) {
+                                        // System.out.println("Moving item:"
+                                        // +
+                                        // firstItem.getType().name());
+
+                                        HashMap<Integer, ItemStack> result = ih.addItem(firstItem);
+                                        // if it went through, remove it
+                                        // from the hopper.
+                                        if (result.isEmpty()) {
+                                            iterateHopper.getInventory().removeItem(firstItem);
                                         }
                                     }
                                 }
-
                             }
                         }
-                    } catch (ConcurrentModificationException cme) {
 
-                    } catch (NullPointerException npe) {
-
-                    } catch (Exception exx) {
-                        exx.printStackTrace();
                     }
                 }
+            } catch (Exception exx) {
+                Owner.log.log(Level.SEVERE, "Error in thread:", exx);
             }
-        } catch (ConcurrentModificationException cme) {
-
         }
 
     }
@@ -292,6 +281,7 @@ public class HopperHandler implements Listener, Runnable {
         }
 
     }
+
     // returns the block this hopper is pointing at.
     public static Block getHopperOutput(Hopper source) {
         byte rawdata = source.getRawData();
@@ -300,25 +290,22 @@ public class HopperHandler implements Listener, Runnable {
         // 2 010 is NORTH (Z-)
         // 4 100 is WEST (X-)
         // 5 101 is EAST (X+)
-        int dir = (rawdata & 1) * 2 - 1; //dir is 1 for 1,3,5,7 or -1 for 0,2,4,8
-        return source.getBlock().getRelative( (rawdata & 4) == 0 ? 0 : dir, rawdata == 0 ? -1 : 0, (rawdata & 4) == 0 ? dir : 0);
+        int dir = (rawdata & 1) * 2 - 1; // dir is 1 for 1,3,5,7 or -1 for
+                                         // 0,2,4,8
+        return source.getBlock().getRelative((rawdata & 4) == 0 ? 0 : dir, rawdata == 0 ? -1 : 0, (rawdata & 4) == 0 ? dir : 0);
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent ev) {
         if (ev.getBlockPlaced().getType() == Material.HOPPER) {
-            synchronized (this) {
-                iteratehoppers.add((Hopper) ev.getBlock().getState());
-            }
+            iteratehoppers.add((Hopper) ev.getBlock().getState());
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent ev) {
         if (ev.getBlock().getType().equals(Material.HOPPER)) {
-            synchronized (this) {
-                iteratehoppers.remove(ev.getBlock().getState());
-            }
+            iteratehoppers.remove(ev.getBlock().getState());
         }
     }
 
@@ -326,9 +313,7 @@ public class HopperHandler implements Listener, Runnable {
     public void OnChunkUnload(ChunkUnloadEvent ev) {
         for (BlockState te : ev.getChunk().getTileEntities()) {
             if (te instanceof Hopper)
-                synchronized (this) {
-                    iteratehoppers.add((Hopper) te);
-                }
+                iteratehoppers.add((Hopper) te);
         }
     }
 
@@ -339,9 +324,7 @@ public class HopperHandler implements Listener, Runnable {
             // hoppers.
             // look for hoppers.
             if (te instanceof Hopper) {
-                synchronized (this) {
-                    iteratehoppers.add((Hopper) te);
-                }
+                iteratehoppers.add((Hopper) te);
             }
 
         }
