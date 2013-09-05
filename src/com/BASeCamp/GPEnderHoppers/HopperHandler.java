@@ -3,7 +3,6 @@ package com.BASeCamp.GPEnderHoppers;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 import nl.rutgerkok.betterenderchest.BetterEnderChest;
@@ -31,23 +30,10 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class HopperHandler implements Listener, Runnable {
-    public ConcurrentHashMap<Long, ClaimData> HopperClaims = new ConcurrentHashMap<Long, ClaimData>();
     private GPEnderHopper Owner = null;
 
     public GPEnderHopper getOwner() {
         return Owner;
-    }
-
-    public ClaimData getHopperData(Claim c) {
-
-        if (c.parent != null)
-            return getHopperData(c.parent);
-
-        if (!HopperClaims.containsKey(c.getID())) {
-            HopperClaims.put(c.getID(), new ClaimData(Owner, c.getID()));
-        }
-        return HopperClaims.get(c.getID());
-
     }
 
     public HopperHandler(GPEnderHopper pOwner) {
@@ -70,22 +56,6 @@ public class HopperHandler implements Listener, Runnable {
         }
         // read in Data.
         // iterate through all claims.
-
-        Bukkit.getScheduler().runTaskLater(Owner, new Runnable() {
-            public void run() {
-                for (int i = 0; i < Owner.gp.dataStore.getClaimArray().size(); i++) {
-                    Claim currclaim = Owner.gp.dataStore.getClaimArray().get(i);
-                    if (currclaim.parent == null) {
-                        // System.out.println("reading in:" +
-                        // currclaim.getID());
-                        HopperClaims.put(currclaim.getID(), new ClaimData(Owner, currclaim.getID()));
-
-                    }
-
-                }
-
-            }
-        }, 20);
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.config.getInt("EnderHoppers.DelayTicks", 60));
     }
@@ -167,7 +137,7 @@ public class HopperHandler implements Listener, Runnable {
                             if (cachedClaim != null) {
 
                                 // grab this claim's data.
-                                ClaimData cd = Owner.hh.getHopperData(cachedClaim);
+                                ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
                                 // System.out.println( "pull: " +
                                 // cd.getHopperPush());
                                 if (!cd.getHopperPush())
@@ -236,7 +206,7 @@ public class HopperHandler implements Listener, Runnable {
                             // is it inside a claim?
                             cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(), true, cachedClaim);
                             if (cachedClaim != null) {
-                                ClaimData cd = Owner.hh.getHopperData(cachedClaim);
+                                ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
                                 // System.out.println( "Pull: " +
                                 // cd.getHopperPull());
                                 if (!cd.getHopperPull())
@@ -374,14 +344,6 @@ public class HopperHandler implements Listener, Runnable {
                 }
             }
 
-        }
-
-    }
-
-    public void saveData() {
-        // TODO Auto-generated method stub
-        for (ClaimData c : HopperClaims.values()) {
-            c.Save();
         }
 
     }

@@ -7,7 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.Scanner;
+
+import org.bukkit.plugin.Plugin;
 
 /**
  * used by GPEnderHoppers to track specific EnderHopper settings for each claim.
@@ -17,32 +20,32 @@ import java.util.Scanner;
  * 
  */
 public class ClaimData {
-
+    public static String ClaimDataFolder;
+    private static HashMap<Long, ClaimData> cachedData = new HashMap<Long, ClaimData>();
+    
+    public static ClaimData getClaimData(long claimID) {
+        if(!cachedData.containsKey(claimID)) {
+            cachedData.put(claimID, new ClaimData(claimID));
+        }
+        return cachedData.get(claimID);
+    }
+    
+    public static void closeAll() {
+        cachedData.clear(); //Should cause all to be not referenced and thus collected in the GC
+    }
+    
+    public static void setFolder(Plugin p) {
+        ClaimDataFolder = p.getDataFolder().getAbsolutePath()  + File.separator + "claimdata";
+    }
+    
+    
     private boolean HopperPush = false;
     private boolean HopperPull = false;
-
-    public boolean getHopperPush() {
-        return HopperPush;
-    }
-
-    public void setHopperPush(boolean value) {
-        HopperPush = value;
-    }
-
-    public boolean getHopperPull() {
-        return HopperPull;
-    }
-
-    public void setHopperPull(boolean value) {
-        HopperPull = value;
-    }
-
-    private GPEnderHopper Owner;
-    public static String ClaimDataFolder;
     private long ClaimID; // id of the claim.
 
-    public GPEnderHopper getOwner() {
-        return Owner;
+    private ClaimData(long ForClaim) {
+        ClaimID = ForClaim;
+        read();
     }
 
     /**
@@ -54,15 +57,26 @@ public class ClaimData {
         return ClaimID;
     }
 
-    public ClaimData(GPEnderHopper pOwner, long ForClaim) {
-        Owner = pOwner;
-        ClaimDataFolder = Owner.getDataFolder().getPath()  + File.separator + "claimdata";
-        ClaimID = ForClaim;
-        Read();
+    public boolean getHopperPush() {
+        return HopperPush;
     }
 
-    public void Read() {
-        String sourcefile = Owner.getDataFolder().getPath() + File.separator + String.valueOf(ClaimID) + ".dat";
+    public void setHopperPush(boolean value) {
+        HopperPush = value;
+        save();
+    }
+
+    public boolean getHopperPull() {
+        return HopperPull;
+    }
+
+    public void setHopperPull(boolean value) {
+        HopperPull = value;
+        save();
+    }
+
+    private void read() {
+        String sourcefile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";
         File getf = new File(sourcefile);
         if (getf.exists()) {
             try {
@@ -80,10 +94,10 @@ public class ClaimData {
         }
     }
 
-    public void Save() {
+    private void save() {
         // persist to a file.
         // we will save to ClaimDataFolder, within a file <claimID>.dat
-        String targetfile = Owner.getDataFolder().getPath() + File.separator + String.valueOf(ClaimID) + ".dat";
+        String targetfile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";
         // new File(targetfile).mkdirs();
         try {
             Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetfile)));

@@ -56,18 +56,15 @@ public class HopperCommand implements CommandExecutor {
 
             // checks out, toggle appropriate perm.
             // retrieve the claim Data.
-            ClaimData cd = Owner.hh.getHopperData(inclaim);
+            ClaimData cd = ClaimData.getClaimData(inclaim.getID());
             if (arg2.equalsIgnoreCase("claimecpull")) {
                 cd.setHopperPull(!cd.getHopperPull());
                 p.sendMessage("Hopper Enderchest Pull:" + (cd.getHopperPull() ? "On" : "Off"));
-                cd.Save();
             } else if (arg2.equalsIgnoreCase("claimecpush")) {
                 cd.setHopperPush(!cd.getHopperPush());
                 p.sendMessage("Hopper Enderchest Push:" + (cd.getHopperPush() ? "On" : "Off"));
-                cd.Save();
             }
             // save it.
-            cd.Save();
 
             return true;
 

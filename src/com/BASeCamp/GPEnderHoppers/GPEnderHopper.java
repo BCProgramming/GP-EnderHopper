@@ -20,8 +20,7 @@ public class GPEnderHopper extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (hh != null)
-            hh.saveData();
+        ClaimData.closeAll();
     }
 
     @Override
