@@ -5,6 +5,8 @@ import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import nl.rutgerkok.betterenderchest.BetterEnderChest;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
@@ -13,9 +15,9 @@ public class GPEnderHopper extends JavaPlugin {
 	GriefPrevention gp = null;
 	HopperHandler hh = null;
 	HopperCommand hc = null;
-	public Configuration cfg = null;
 	public BetterEnderChest becPlugin = null;
 	public static Logger log = Logger.getLogger("Minecraft");
+	public Configuration config;
 	
 	
 	@Override
@@ -42,7 +44,9 @@ public class GPEnderHopper extends JavaPlugin {
 		} catch(Exception e) {
 			log.severe("Found a GriefPrevention plugin but it is not of the right class!");
 		}
-		cfg = new Configuration(this);
+		saveDefaultConfig();
+		config = getConfig();
+		
 		//register for Hopper Events.
 		hh = new HopperHandler(this);
 		Bukkit.getPluginManager().registerEvents(hh, this);

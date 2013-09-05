@@ -94,7 +94,7 @@ public class HopperHandler implements Listener,Runnable{
 		
 		
 		
-		Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.cfg.EnderHopperDelayTicks);
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.config.getInt("EnderHoppers.DelayTicks", 60));
 	}
 	//based on the BetterEnderChest Source code in BEC's Event Handler
 	private String getInventoryName(String pPlayer,Block clickedBlock){
