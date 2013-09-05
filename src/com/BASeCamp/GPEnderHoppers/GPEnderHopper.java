@@ -15,7 +15,7 @@ public class GPEnderHopper extends JavaPlugin {
     HopperHandler hh = null;
     HopperCommand hc = null;
     public BetterEnderChest becPlugin = null;
-    public static Logger log = Logger.getLogger("Minecraft");
+    public Logger log;
     public Configuration config;
 
     @Override
@@ -25,6 +25,7 @@ public class GPEnderHopper extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        log = getLogger();
         log.info("GPEnderHopper Loading...");
         try {
             gp = (GriefPrevention) Bukkit.getPluginManager().getPlugin("GriefPrevention");
