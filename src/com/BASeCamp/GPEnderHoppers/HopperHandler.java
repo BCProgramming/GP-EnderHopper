@@ -177,7 +177,7 @@ public class HopperHandler implements Listener, Runnable {
                                         }
                                     }
                                     if (firstItem != null) {
-                                        System.out.println("Moving item:" + firstItem.getType().name());
+                                        // System.out.println("Moving item:" + firstItem.getType().name());
                                         // System.out.println("moved item "
                                         // +
                                         // firstItem.getType().toString()
