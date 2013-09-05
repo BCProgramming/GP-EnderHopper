@@ -31,6 +31,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class HopperHandler implements Listener, Runnable {
     private GPEnderHopper Owner = null;
+    private LinkedList<Hopper> iteratehoppers = new LinkedList<Hopper>();
+    private Inventory ih = null;
 
     public GPEnderHopper getOwner() {
         return Owner;
@@ -43,9 +45,7 @@ public class HopperHandler implements Listener, Runnable {
         for (World w : Bukkit.getWorlds()) {
             for (Chunk c : w.getLoadedChunks()) {
                 for (BlockState te : c.getTileEntities()) {
-                    if (te instanceof Hopper) {
-                        iteratehoppers.add((Hopper) te);
-                    }
+                    if (te instanceof Hopper) addHopper((Hopper)te);
                 }
 
             }
@@ -55,6 +55,13 @@ public class HopperHandler implements Listener, Runnable {
         // iterate through all claims.
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.config.getInt("EnderHoppers.DelayTicks", 60));
+    }
+    
+    public void addHopper(Hopper hop) {
+        iteratehoppers.add(hop);
+    }
+    public void removeHopper(Hopper hop) {
+        iteratehoppers.remove(hop);
     }
 
     // based on the BetterEnderChest Source code in BEC's Event Handler
@@ -91,8 +98,6 @@ public class HopperHandler implements Listener, Runnable {
         }
         return null;
     }
-
-    private Inventory ih = null;
 
     public void run() {
         // System.out.println("HopperHandler...");
@@ -135,10 +140,7 @@ public class HopperHandler implements Listener, Runnable {
 
                         // grab this claim's data.
                         ClaimData cd = ClaimData.getClaimData(cachedClaim.getID());
-                        // System.out.println( "pull: " +
-                        // cd.getHopperPush());
-                        if (!cd.getHopperPush())
-                            continue;
+                        if (!cd.getHopperPush()) continue;
                         // get the claim Owner...
                         String pOwner = cachedClaim.ownerName;
                         // continue if there is a white and the player
@@ -269,7 +271,6 @@ public class HopperHandler implements Listener, Runnable {
 
     }
 
-    private LinkedList<Hopper> iteratehoppers = new LinkedList<Hopper>();
 
     public static Block getHopperInput(Hopper source) {
         try {
@@ -297,36 +298,27 @@ public class HopperHandler implements Listener, Runnable {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent ev) {
-        if (ev.getBlockPlaced().getType() == Material.HOPPER) {
-            iteratehoppers.add((Hopper) ev.getBlock().getState());
-        }
+        if (ev.getBlockPlaced().getType() == Material.HOPPER) addHopper((Hopper) ev.getBlock().getState());
+        //TODO: Handle Ender Chest events
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent ev) {
-        if (ev.getBlock().getType().equals(Material.HOPPER)) {
-            iteratehoppers.remove(ev.getBlock().getState());
-        }
+        if (ev.getBlock().getType().equals(Material.HOPPER)) removeHopper((Hopper)ev.getBlock().getState());
+        //TODO: Handle Ender Chest events
     }
 
     @EventHandler
     public void OnChunkUnload(ChunkUnloadEvent ev) {
         for (BlockState te : ev.getChunk().getTileEntities()) {
-            if (te instanceof Hopper)
-                iteratehoppers.add((Hopper) te);
+            if (te instanceof Hopper) addHopper((Hopper) te);
         }
     }
 
     @EventHandler
     public void OnChunkLoad(ChunkLoadEvent ev) {
         for (BlockState te : ev.getChunk().getTileEntities()) {
-            // we cannot find ender chests, unfortunately, but we can find
-            // hoppers.
-            // look for hoppers.
-            if (te instanceof Hopper) {
-                iteratehoppers.add((Hopper) te);
-            }
-
+            if (te instanceof Hopper) addHopper((Hopper) te);
         }
 
     }
