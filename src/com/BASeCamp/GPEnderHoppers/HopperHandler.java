@@ -29,7 +29,6 @@ import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 public class HopperHandler implements Listener, Runnable {
     public ConcurrentHashMap<Long, ClaimData> HopperClaims = new ConcurrentHashMap<Long, ClaimData>();
@@ -90,51 +89,39 @@ public class HopperHandler implements Listener, Runnable {
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Owner, this, 20, Owner.config.getInt("EnderHoppers.DelayTicks", 60));
     }
-
     // based on the BetterEnderChest Source code in BEC's Event Handler
     private String getInventoryName(String pPlayer, Block clickedBlock) {
-        String inventoryName = pPlayer;
-        Player grabPlayer = Bukkit.getPlayer(pPlayer);
-
         if (Owner.becPlugin == null)
             return pPlayer;
+        Player grabPlayer = Bukkit.getPlayer(pPlayer);
+
         // Find out the inventory that should be opened
         ProtectionBridge protectionBridge = Owner.becPlugin.getProtectionBridges().getSelectedRegistration();
-        if (protectionBridge.isProtected(clickedBlock)) {
+        if (!protectionBridge.isProtected(clickedBlock) && PublicChest.openOnOpeningUnprotectedChest) {
+            // Unprotected Ender chest
+            // Get public chest
+            if (grabPlayer.hasPermission("betterenderchest.user.open.publicchest")) {
+                return BetterEnderChest.PUBLIC_CHEST_NAME;
+            } else {
+                // Get player's name
+                if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
+                    return grabPlayer.getName();
+                }
+            }
+        } else {
             // Protected Ender Chest
             if (protectionBridge.canAccess(grabPlayer, clickedBlock)) {
                 // player can access the chest
                 if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
                     // and has the correct permission node
-
                     // Get the owner's name
-                    inventoryName = protectionBridge.getOwnerName(clickedBlock);
+                    return protectionBridge.getOwnerName(clickedBlock);
                 } else {
-                    // Show an error
-                    // player.sendMessage("" + ChatColor.RED +
-                    // Translations.NO_PERMISSION);
+                    return null;
                 }
             }
-        } else {
-            // Unprotected Ender chest
-
-            // Don't cancel Lockette's sign placement
-            if (PublicChest.openOnOpeningUnprotectedChest) {
-                // Get public chest
-                if (grabPlayer.hasPermission("betterenderchest.user.open.publicchest")) {
-                    inventoryName = BetterEnderChest.PUBLIC_CHEST_NAME;
-
-                } else {
-                    // Get player's name
-                    if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
-                        inventoryName = grabPlayer.getName();
-                    }
-                }
-
-            }
-
         }
-        return inventoryName;
+        return null;
     }
 
     private Inventory ih = null;
@@ -335,31 +322,16 @@ public class HopperHandler implements Listener, Runnable {
         }
 
     }
-
-    // 0 is straight down
-    // 1 is SOUTH (Z+)
-    // 2 is NORTH (Z-)
-    // 4 is WEST (X-)
-    // 5 is EAST (X+)
-    private static Vector[] offsets = new Vector[] {
-
-    new Vector(0, -1, 0), new Vector(0, 0, 1), new Vector(0, 0, -1), null, new Vector(-1, 0, 0), new Vector(1, 0, 0) };
-
     // returns the block this hopper is pointing at.
     public static Block getHopperOutput(Hopper source) {
-        Location sourcespot = source.getBlock().getLocation();
         byte rawdata = source.getRawData();
-        // 0 is straight down
-        // 1 is SOUTH (Z+)
-        // 2 is NORTH (Z-)
-        // 4 is WEST (X-)
-        // 5 is EAST (X+)
-
-        Vector useoffset = offsets[rawdata];
-
-        Location outputblock = new Location(sourcespot.getWorld(), sourcespot.getBlockX() + useoffset.getBlockX(), sourcespot.getBlockY() + useoffset.getBlockY(), sourcespot.getBlockZ() + useoffset.getBlockZ());
-
-        return sourcespot.getWorld().getBlockAt(outputblock);
+        // 0 000 is straight down
+        // 1 001 is SOUTH (Z+)
+        // 2 010 is NORTH (Z-)
+        // 4 100 is WEST (X-)
+        // 5 101 is EAST (X+)
+        int dir = (rawdata & 1) * 2 - 1; //dir is 1 for 1,3,5,7 or -1 for 0,2,4,8
+        return source.getBlock().getRelative( (rawdata & 4) == 0 ? 0 : dir, rawdata == 0 ? -1 : 0, (rawdata & 4) == 0 ? dir : 0);
     }
 
     @EventHandler
