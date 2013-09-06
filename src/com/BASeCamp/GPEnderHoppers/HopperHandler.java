@@ -49,7 +49,7 @@ public class HopperHandler implements Listener,Runnable{
 		if(c.parent!=null) return getHopperData(c.parent);
 		
 		if(!HopperClaims.containsKey(c.getID())){
-			HopperClaims.put(c.getID(), new ClaimData(Owner,c.getID()));
+			HopperClaims.put(c.getID(), new ClaimData(Owner,c));
 		}
 		return HopperClaims.get(c.getID());
 		
@@ -83,7 +83,7 @@ public class HopperHandler implements Listener,Runnable{
 			Claim currclaim = Owner.gp.dataStore.getClaimArray().get(i);
 			if(currclaim.parent==null){
 				//System.out.println("reading in:" + currclaim.getID());
-			    HopperClaims.put(currclaim.getID(),new ClaimData(Owner,currclaim.getID()));
+			    HopperClaims.put(currclaim.getID(),new ClaimData(Owner,currclaim));
 			
 			}
 			
@@ -175,7 +175,7 @@ public class HopperHandler implements Listener,Runnable{
 			if(inputblock!=null && inputblock.getType().equals(Material.ENDER_CHEST)){
 				
 				//is it inside a claim?
-				cachedClaim = Owner.gp.dataStore.getClaimAt(inputblock.getLocation(), true, cachedClaim);
+				cachedClaim = Owner.gp.dataStore.getClaimAt(inputblock.getLocation(), true);
 				
 				if(cachedClaim!=null){
 					
@@ -184,7 +184,7 @@ public class HopperHandler implements Listener,Runnable{
 					//System.out.println( "pull: " + cd.getHopperPush());
 					if(!cd.getHopperPush()) continue;
 					//get the claim Owner...
-					String pOwner = cachedClaim.ownerName;
+					String pOwner = cachedClaim.getOwnerName();
 					//continue if there is a white and the player is not allowed.
 					Player gotPlayer = Bukkit.getPlayer(pOwner);
 					
@@ -249,14 +249,14 @@ public class HopperHandler implements Listener,Runnable{
     		if(outputblock!=null && outputblock.getType().equals(Material.ENDER_CHEST)){
 			//	System.out.println("output Enderchest");
 				//is it inside a claim?
-				cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(),true,cachedClaim);
+				cachedClaim = Owner.gp.dataStore.getClaimAt(outputblock.getLocation(),true);
 				if(cachedClaim!=null ){
 					ClaimData cd = Owner.hh.getHopperData(cachedClaim);
 			//		System.out.println( "Pull: " + cd.getHopperPull());
 					if(!cd.getHopperPull()) continue;
 					
 					//get the claim owner...
-					String pOwner = cachedClaim.ownerName;
+					String pOwner = cachedClaim.getOwnerName();
 					
 						
 					Player gotPlayer = Bukkit.getPlayer(pOwner);

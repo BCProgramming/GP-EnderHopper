@@ -41,7 +41,7 @@ public class HopperCommand implements CommandExecutor{
 		// TODO Auto-generated method stub
 		if(!(arg0 instanceof Player)) return false;
 		Player p = (Player)arg0;
-		Claim inclaim = Owner.gp.dataStore.getClaimAt(p.getLocation(), true, null);
+		Claim inclaim = Owner.gp.dataStore.getClaimAt(p.getLocation(), true);
 		
 		
 		
@@ -60,7 +60,7 @@ public class HopperCommand implements CommandExecutor{
 			
 			
 			//make sure the claim is owned by the player, or they are set to ignore claims.
-			if(!(pd.ignoreClaims   || inclaim.ownerName.equalsIgnoreCase(p.getName()))){
+			if(!(pd.ignoreClaims   || inclaim.getOwnerName().equalsIgnoreCase(p.getName()))){
 				//nope!
 				p.sendMessage(ChatColor.RED + " You do not own this claim!");
 				//if they have ignoreclaims perm from GP, show that...

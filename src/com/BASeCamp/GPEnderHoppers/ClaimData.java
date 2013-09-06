@@ -10,6 +10,12 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Scanner;
 
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import me.ryanhamshire.GriefPrevention.Claim;
+
+
 /**
  * used by GPEnderHoppers to track specific EnderHopper settings for each claim.
  * @author BC_Programming
@@ -43,50 +49,43 @@ public class ClaimData {
 	 */
 	public long getClaimID(){return ClaimID;}
 	
-	public ClaimData(GPEnderHopper pOwner,long ForClaim){
+	public ClaimData(GPEnderHopper pOwner,Claim ForClaim){
 		Owner=pOwner;
-		ClaimID = ForClaim;
-		Read();
+		ClaimID = ForClaim.getID();
+		Read(ForClaim);
 	}
 	
-	public void Read(){
-		String sourcefile = Owner.cfg.dataLayerFolderPath + File.separator + String.valueOf(ClaimID) + ".dat";
-		File getf = new File(sourcefile);
-		if(getf.exists()){
-			try {
-		    Scanner s = new Scanner(getf);
-		    //read in the Push and Pull data.
-		    String readpush = s.next();
-		    String readpull = s.next();
-		    HopperPush = Boolean.parseBoolean(readpush);
-		    HopperPull = Boolean.parseBoolean(readpull);
-			s.close();
-			}
-			catch(IOException ex){
-				
-			}
-			
+	public void Read(Claim readforclaim){
+		
+		FileConfiguration readsource = Owner.gp.getMetaHandler().getClaimMeta("EnderHopper", readforclaim);
+		YamlConfiguration outConfig = new YamlConfiguration();
+		
+		HopperPush = readsource.getBoolean("EnderHopper.Push",true);
+		HopperPull = readsource.getBoolean("EnderHopper.Pull",true);
+		outConfig.set("EnderHopper.Push",HopperPush);
+		outConfig.set("EnderHopper.Pull",HopperPull);
+		Owner.gp.getMetaHandler().setClaimMeta("EnderHopper", readforclaim,outConfig);
+		
+		
+		
+	}
+
+	public void Save(){
+		if(Owner==null){
+			System.out.println("Owner is null.");
+			return;
 		}
+		if(Owner.ds==null){
+			System.out.println("dataStore is null.");
+			return;
+		}
+		Claim targetclaim = Owner.ds.getClaim(ClaimID);
+		if(targetclaim==null) return;
+		YamlConfiguration outConfig = new YamlConfiguration();
+		outConfig.set("EnderHopper.Push", HopperPush);
+		outConfig.set("EnderHopper.Pull",HopperPull);
+		Owner.gp.getMetaHandler().setClaimMeta("EnderHopper", targetclaim,outConfig);
+		
 	}
-	
-    public void Save(){
-    	//persist to a file.
-    	//we will save to ClaimDataFolder, within a file <claimID>.dat
-    	String targetfile = Owner.cfg.dataLayerFolderPath + File.separator + String.valueOf(ClaimID) + ".dat";
-    	//new File(targetfile).mkdirs();
-    	try {
-    	    Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetfile)));
-    	    writer.write(String.valueOf(HopperPush) + "\n");
-    	    writer.write(String.valueOf(HopperPull) + "\n");
-    	    writer.close();
-    	}
-    	catch(FileNotFoundException fnf){
-    		
-    	}
-    	catch(IOException exx){
-    		
-    	}
-    	
-    }
 	
 }
