@@ -187,11 +187,11 @@ public class HopperHolder {
             case 0:
                 face = BlockFace.DOWN;
                 break;
-            case 1:
-                face = BlockFace.SOUTH;
-                break;
             case 2:
                 face = BlockFace.NORTH;
+                break;
+            case 3:
+                face = BlockFace.SOUTH;
                 break;
             case 4:
                 face = BlockFace.WEST;
