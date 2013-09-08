@@ -6,9 +6,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Hopper;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -57,16 +60,22 @@ public class HopperHandler implements Listener, Runnable {
         for(HopperHolder hold: toRun) hold.handle();
     }
     
-    @EventHandler
+    @EventHandler (priority = EventPriority.MONITOR)
     public void onBlockPlace(BlockPlaceEvent ev) {
+        if(ev.isCancelled()) return;
         if (ev.getBlockPlaced().getType() == Material.HOPPER) addHopper((Hopper) ev.getBlock().getState());
-        //TODO: Handle Ender Chest events
+        if (ev.getBlockPlaced().getType() == Material.ENDER_CHEST) {
+            for(BlockFace f: new BlockFace[]{BlockFace.UP,BlockFace.DOWN,BlockFace.NORTH,BlockFace.EAST,BlockFace.SOUTH,BlockFace.WEST}) {
+                Block b = ev.getBlockPlaced().getRelative(f);
+                if(b.getType() == Material.HOPPER) addHopper((Hopper) b.getState());
+            }
+        }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent ev) {
         if (ev.getBlock().getType().equals(Material.HOPPER)) removeHopper((Hopper)ev.getBlock().getState());
-        //TODO: Handle Ender Chest events
+        //Note: no need for enderchest events, HopperHolders will catch this by themselves.
     }
 
     @EventHandler

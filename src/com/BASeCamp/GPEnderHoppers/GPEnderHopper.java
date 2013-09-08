@@ -16,7 +16,7 @@ public class GPEnderHopper extends JavaPlugin {
     public static Logger log;
     public static GPEnderHopper self;
     public Configuration config;
-    HopperHandler hh = null;
+    static HopperHandler hh = null;
     HopperCommand hc = null;
 
     @Override
@@ -25,6 +25,7 @@ public class GPEnderHopper extends JavaPlugin {
         becPlugin = null;
         gp = null;
         self = null;
+        hh = null;
     }
 
     @Override
