@@ -46,7 +46,7 @@ public class GPEnderHopper extends JavaPlugin {
         try {
             becPlugin = (BetterEnderChest) Bukkit.getPluginManager().getPlugin("BetterEnderChest");
         } catch (Exception e) {
-            log.severe("Found a GriefPrevention plugin but it is not of the right class!");
+            log.severe("Found a BetterEnderChest plugin but it is not of the right class!");
         }
         saveDefaultConfig();
         config = getConfig();
