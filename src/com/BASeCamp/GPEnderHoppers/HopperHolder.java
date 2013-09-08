@@ -46,9 +46,9 @@ public class HopperHolder {
     
     public void recalc() {
         in = getHopperInput(hop);
-        if(in.getType() != Material.ENDER_CHEST) in = null;
+        if(in != null && in.getType() != Material.ENDER_CHEST) in = null;
         out = getHopperOutput(hop);
-        if(out.getType() != Material.ENDER_CHEST) out = null;
+        if(out != null && out.getType() != Material.ENDER_CHEST) out = null;
     }
 
     public void handle() {
@@ -74,7 +74,7 @@ public class HopperHolder {
     private void handleMove(Block chest, final boolean direction) {
         debug("handling "+(direction? "output" : "input"));
         //Chests must be open-able to be hopper-able
-        if(!chest.getRelative(BlockFace.UP).getType().isTransparent()) {
+        if(chest.getRelative(BlockFace.UP).getType().isOccluding()) {
             debug("Chest cannot be opened.");
             return;
         }

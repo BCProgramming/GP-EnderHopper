@@ -72,7 +72,11 @@ public class HopperHandler implements Listener, Runnable {
         if (ev.getBlockPlaced().getType() == Material.ENDER_CHEST) {
             for(BlockFace f: new BlockFace[]{BlockFace.UP,BlockFace.DOWN,BlockFace.NORTH,BlockFace.EAST,BlockFace.SOUTH,BlockFace.WEST}) {
                 Block b = ev.getBlockPlaced().getRelative(f);
-                if(b.getType() == Material.HOPPER) addHopper((Hopper) b.getState());
+                if(b.getType() == Material.HOPPER) {
+                    if(hasHopper((Hopper) b.getState())) {
+                        HopperHolder.getHolder((Hopper) b.getState()).recalc();
+                    } else addHopper((Hopper) b.getState());
+                }
             }
         }
     }
