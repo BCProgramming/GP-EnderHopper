@@ -2,13 +2,13 @@ package com.BASeCamp.GPEnderHoppers;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.logging.Level;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 
@@ -22,8 +22,9 @@ import org.bukkit.plugin.Plugin;
  * 
  */
 public class ClaimData {
-    public static String ClaimDataFolder;
+    public static File claimFolder;
     private static HashMap<Long, ClaimData> cachedData = new HashMap<Long, ClaimData>();
+    private static boolean useMeta = false;
     
     public static ClaimData getClaimData(long claimID) {
         if(!cachedData.containsKey(claimID)) {
@@ -43,7 +44,8 @@ public class ClaimData {
     }
     
     public static void setFolder(Plugin p) {
-        ClaimDataFolder = p.getDataFolder().getAbsolutePath()  + File.separator + "claimdata";
+        claimFolder = new File(p.getDataFolder(), "claimdata");
+        if(!claimFolder.exists()) claimFolder.mkdir();
     }
     
     
@@ -96,8 +98,7 @@ public class ClaimData {
 
     private void read() {
         //TODO: Check GP Version and use their metadata store when available.
-        String sourcefile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";
-        File getf = new File(sourcefile);
+        File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
         if (getf.exists()) {
             try {
                 Scanner s = new Scanner(getf);
@@ -108,7 +109,7 @@ public class ClaimData {
                 HopperPull = Boolean.parseBoolean(readpull);
                 s.close();
             } catch (IOException ex) {
-
+                GPEnderHopper.log.log(Level.SEVERE, "Exception in load()", ex);
             }
 
         }
@@ -118,17 +119,15 @@ public class ClaimData {
         //TODO: Check GP Version and use their metadata store when available.
         // persist to a file.
         // we will save to ClaimDataFolder, within a file <claimID>.dat
-        String targetfile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";
+        File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
         // new File(targetfile).mkdirs();
         try {
-            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(targetfile)));
+            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(getf)));
             writer.write(String.valueOf(HopperPush) + "\n");
             writer.write(String.valueOf(HopperPull) + "\n");
             writer.close();
-        } catch (FileNotFoundException fnf) {
-
-        } catch (IOException exx) {
-
+        } catch(Exception e) {
+            GPEnderHopper.log.log(Level.SEVERE, "Exception in save()", e);
         }
 
     }

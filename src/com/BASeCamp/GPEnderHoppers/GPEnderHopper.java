@@ -50,7 +50,7 @@ public class GPEnderHopper extends JavaPlugin {
         }
         saveDefaultConfig();
         config = getConfig();
-
+        ClaimData.setFolder(this);
         // register for Hopper Events.
         hh = new HopperHandler(this);
         Bukkit.getPluginManager().registerEvents(hh, this);
