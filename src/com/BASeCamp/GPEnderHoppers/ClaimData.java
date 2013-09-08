@@ -12,6 +12,9 @@ import java.util.logging.Level;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -43,11 +46,48 @@ public class ClaimData {
         cachedData.clear(); //Should cause all to be not referenced and thus collected in the GC
     }
     
-    public static void setFolder(Plugin p) {
+    public static void setFolder(Plugin p)  {
         claimFolder = new File(p.getDataFolder(), "claimdata");
-        if(!claimFolder.exists()) claimFolder.mkdir();
+        try {
+            GPEnderHopper.gp.getClass().getMethod("getMetaHandler");
+            GPEnderHopper.log.info("Using GP Meta");
+            Bukkit.getScheduler().scheduleSyncDelayedTask(p, new Runnable() {
+                @Override
+                public void run() {
+                    convertAll();
+                }
+            });
+            useMeta = true;
+        } catch(Exception e) {
+            GPEnderHopper.log.info("Using files");
+            useMeta = false;
+            if(!claimFolder.exists()) claimFolder.mkdir();
+        }
     }
     
+    public static void convertAll() {//Flat file -> meta handler.
+        if(!claimFolder.exists()) return;
+        if(!claimFolder.isDirectory()) return;
+        GPEnderHopper.log.info("Converting files.");
+        for(File f: claimFolder.listFiles()) {
+            try {
+                if(f.isDirectory()) continue;
+                if(!f.getName().endsWith(".dat")) continue;
+                GPEnderHopper.log.info("Converting "+f.getName());
+                long id = Long.parseLong(f.getName().split("\\.")[0]);
+                useMeta = false;
+                ClaimData data = getClaimData(id);
+                data.read();
+                useMeta = true;
+                data.save();
+                f.delete();
+            } catch(Exception e) {
+                GPEnderHopper.log.log(Level.SEVERE,"Could not convert file '"+f.getName()+"'!", e);
+            }
+        }
+        claimFolder.delete();
+        closeAll();
+    }
     
     private boolean HopperPush = false;
     private boolean HopperPull = false;
@@ -97,7 +137,12 @@ public class ClaimData {
     }
 
     private void read() {
-        //TODO: Check GP Version and use their metadata store when available.
+        if(useMeta) {
+            FileConfiguration conf = GPEnderHopper.gp.getMetaHandler().getClaimMeta("EnderHopper", getClaim());
+            HopperPush = conf.getBoolean("EnderHopper.Push", false);
+            HopperPull = conf.getBoolean("EnderHopper.Pull", false);
+            return;
+        }
         File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
         if (getf.exists()) {
             try {
@@ -116,7 +161,13 @@ public class ClaimData {
     }
 
     private void save() {
-        //TODO: Check GP Version and use their metadata store when available.
+        if(useMeta) {
+            YamlConfiguration conf = new YamlConfiguration();
+            conf.set("EnderHopper.Push", HopperPush);
+            conf.set("EnderHopper.Pull", HopperPull);
+            GPEnderHopper.gp.getMetaHandler().setClaimMeta("EnderHopper", getClaim(), conf);
+            return;
+        }
         // persist to a file.
         // we will save to ClaimDataFolder, within a file <claimID>.dat
         File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
