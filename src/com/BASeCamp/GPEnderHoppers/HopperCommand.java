@@ -7,6 +7,9 @@ import me.ryanhamshire.GriefPrevention.PlayerData;
 import me.ryanhamshire.GriefPrevention.TextMode;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Hopper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,6 +23,20 @@ public class HopperCommand implements CommandExecutor {
         if(command.getName().equalsIgnoreCase("claimecpull")) type = false;
         if(command.getName().equalsIgnoreCase("claimecpush")) type = true;
         if(type == null) return false; // This is not the command you're looking for.
+        if(sender instanceof Player && args.length == 1 && args[0].equalsIgnoreCase("debug")) {
+            Block b = ((Player)sender).getTargetBlock(null, 10);
+            if(b.getType() != Material.HOPPER) {
+                sender.sendMessage("That's not a hopper");
+                return true;
+            }
+            if(!GPEnderHopper.hh.hasHopper((Hopper) b.getState())) {
+                sender.sendMessage("That's not being tracked!");
+                return true;
+            }
+            HopperHolder hold = HopperHolder.getHolder((Hopper) b.getState());
+            hold.debug = sender.getName();
+            return true;
+        }
         long claimID = -1;
         if(!(sender instanceof Player) && args.length == 0) {//Console most likely
             if(sender.hasPermission("EnderHoppers.Manipulate.byId")) {

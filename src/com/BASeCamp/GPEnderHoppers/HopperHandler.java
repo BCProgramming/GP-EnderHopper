@@ -55,6 +55,11 @@ public class HopperHandler implements Listener, Runnable {
         hh.destroy();
         toRun.remove(hh);
     }
+    public boolean hasHopper(Hopper hop) {
+        HopperHolder hh = HopperHolder.getHolder(hop);
+        if(hh == null) return false;
+        return toRun.contains(hh);
+    }
 
     public void run() {
         for(HopperHolder hold: toRun) hold.handle();

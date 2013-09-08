@@ -15,7 +15,10 @@ public class ConsumerWraper {
         GPEnderHopper.becPlugin.getChestCache().getInventory(invName, wg, new Consumer<Inventory>() {
             @Override
             public void consume(final Inventory i) {
-                if(i == null) return;
+                if(i == null) {
+                    hold.debug("BEC returned no chest");
+                    return;
+                }
                 if(caller.equals(Thread.currentThread())) {
                     hold.completeMove(i, dir);
                 } else {

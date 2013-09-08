@@ -35,6 +35,7 @@ public class HopperHolder {
     Hopper hop;
     ClaimData claim;
     WorldGroup wg;
+    String debug = null;
 
     private HopperHolder(Hopper hopper, ClaimData claimdata) {
         hop = hopper;
@@ -63,6 +64,7 @@ public class HopperHolder {
                     handleMove(out, true);
                 } else recalc();
             }
+            debug = null;
         } catch(Exception e) {
             GPEnderHopper.log.log(Level.SEVERE, "Exception in thread", e);
             recalc(); //This was probably an uncaught enderchest destruction - should recalc incase!
@@ -70,8 +72,12 @@ public class HopperHolder {
     }
     
     private void handleMove(Block chest, final boolean direction) {
+        debug("handling "+(direction? "output" : "input"));
         //Chests must be open-able to be hopper-able
-        if(!chest.getRelative(BlockFace.UP).getType().isTransparent()) return;
+        if(!chest.getRelative(BlockFace.UP).getType().isTransparent()) {
+            debug("Chest cannot be opened.");
+            return;
+        }
         OfflinePlayer p = Bukkit.getOfflinePlayer(claim.getClaim().getOwnerName());
         //Both methods require players to be online.
         if(!p.isOnline()) return;
@@ -82,18 +88,22 @@ public class HopperHolder {
         } else {
             String invName = null;
             ProtectionBridge protectionBridge = GPEnderHopper.becPlugin.getProtectionBridges().getSelectedRegistration();
-            if (!protectionBridge.isProtected(chest) && PublicChest.openOnOpeningUnprotectedChest) {
+            if (!protectionBridge.isProtected(chest)) {
+                debug("BEC: Unprotected.");
                 // Unprotected Ender chest
                 // Get public chest
-                if (grabPlayer.hasPermission("betterenderchest.user.open.publicchest")) {
+                if (grabPlayer.hasPermission("betterenderchest.user.open.publicchest") && PublicChest.openOnOpeningUnprotectedChest) {
                     invName = BetterEnderChest.PUBLIC_CHEST_NAME;
+                    debug("BEC: Public Chest.");
                 } else {
                     // Get player's name
                     if (grabPlayer.hasPermission("betterenderchest.user.open.privatechest")) {
                         invName = grabPlayer.getName();
-                    }
+                        debug("BEC: Own Chest.");
+                    } else debug("BEC: No Permission.");
                 }
             } else {
+                debug("BEC: Protected.");
                 // Protected Ender Chest
                 if (protectionBridge.canAccess(grabPlayer, chest)) {
                     // player can access the chest
@@ -104,12 +114,17 @@ public class HopperHolder {
                     }
                 }
             }
-            if(invName == null) return; // No chest! Uh-oh!
+            if(invName == null) {
+                debug("BEC: No chest.");
+                return; // No chest! Uh-oh!
+            }
+            debug("BEC: "+invName);
             new ConsumerWraper(invName, wg, this, direction);
         }
     }
     
     void completeMove(Inventory invent, boolean direction) {
+        debug("Got inventory");
         Inventory hopper = hop.getInventory();
         //This is now always thread-safe and in the bukkit thread.
         if(direction == false) {//input
@@ -155,6 +170,13 @@ public class HopperHolder {
 
     public static Block getHopperInput(Hopper source) {
         return source.getBlock().getRelative(BlockFace.UP);
+    }
+    
+    public void debug(String message) {
+        if(debug == null) return;
+        Player p = Bukkit.getPlayer(debug);
+        if(p == null) debug = null;
+        p.sendMessage("Debug: "+message);
     }
 
     // returns the block this hopper is pointing at.
