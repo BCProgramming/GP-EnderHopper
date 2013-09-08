@@ -1,6 +1,6 @@
 package com.BASeCamp.GPEnderHoppers;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -20,7 +20,7 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 
 public class HopperHandler implements Listener, Runnable {
     private GPEnderHopper Owner = null;
-    private ArrayList<HopperHolder> toRun = new ArrayList<HopperHolder>();
+    private HashSet<HopperHolder> toRun = new HashSet<HopperHolder>();
 
     public GPEnderHopper getOwner() {
         return Owner;
