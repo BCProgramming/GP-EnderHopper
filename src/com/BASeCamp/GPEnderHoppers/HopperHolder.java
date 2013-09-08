@@ -111,8 +111,8 @@ public class HopperHolder {
                         // and has the correct permission node
                         // Get the owner's name
                         invName = protectionBridge.getOwnerName(chest);
-                    }
-                }
+                    } else debug("BEC: No permission.");
+                } else debug("BEC: Chest cannot be accessed.");
             }
             if(invName == null) {
                 debug("BEC: No chest.");
