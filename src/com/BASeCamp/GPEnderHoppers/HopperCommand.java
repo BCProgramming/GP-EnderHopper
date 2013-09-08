@@ -14,23 +14,13 @@ import org.bukkit.entity.Player;
 
 public class HopperCommand implements CommandExecutor {
 
-    private GPEnderHopper Owner = null;
-
-    public GPEnderHopper getOwner() {
-        return Owner;
-    }
-
-    public HopperCommand(GPEnderHopper pOwner) {
-        Owner = pOwner;
-    }
-
     @Override
     public boolean onCommand(CommandSender arg0, Command arg1, String arg2, String[] arg3) {
         // TODO Auto-generated method stub
         if (!(arg0 instanceof Player))
             return false;
         Player p = (Player) arg0;
-        Claim inclaim = Owner.gp.dataStore.getClaimAt(p.getLocation(), true, null);
+        Claim inclaim = GPEnderHopper.gp.dataStore.getClaimAt(p.getLocation(), true, null);
 
         if (arg2.equalsIgnoreCase("claimecpull") || (arg2.equalsIgnoreCase("claimecpush"))) {
             if (inclaim == null) {
@@ -38,7 +28,7 @@ public class HopperCommand implements CommandExecutor {
                 return false;
             }
             boolean ignoreclaimperm = p.hasPermission("GriefPrevention.IgnoreClaims");
-            PlayerData pd = Owner.gp.dataStore.getPlayerData(p.getName());
+            PlayerData pd = GPEnderHopper.gp.dataStore.getPlayerData(p.getName());
 
             // make sure the claim is owned by the player, or they are set to
             // ignore claims.

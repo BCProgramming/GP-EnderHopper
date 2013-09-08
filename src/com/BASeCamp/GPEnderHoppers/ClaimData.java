@@ -10,6 +10,8 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import me.ryanhamshire.GriefPrevention.Claim;
+
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -29,6 +31,12 @@ public class ClaimData {
         }
         return cachedData.get(claimID);
     }
+    public static ClaimData getClaimData(Claim claim) {
+        if(!cachedData.containsKey(claim.getID())) {
+            cachedData.put(claim.getID(), new ClaimData(claim));
+        }
+        return cachedData.get(claim.getID());
+    }
     
     public static void closeAll() {
         cachedData.clear(); //Should cause all to be not referenced and thus collected in the GC
@@ -42,9 +50,15 @@ public class ClaimData {
     private boolean HopperPush = false;
     private boolean HopperPull = false;
     private long ClaimID; // id of the claim.
+    private Claim claim = null; //Do not fill unless neccesary
 
     private ClaimData(long ForClaim) {
         ClaimID = ForClaim;
+        read();
+    }
+    private ClaimData(Claim ForClaim) {
+        ClaimID = ForClaim.getID();
+        claim = ForClaim;
         read();
     }
 
@@ -55,6 +69,11 @@ public class ClaimData {
      */
     public long getClaimID() {
         return ClaimID;
+    }
+    
+    public Claim getClaim() {
+        if(claim == null) claim = GPEnderHopper.gp.dataStore.getClaim(ClaimID);
+        return claim;
     }
 
     public boolean getHopperPush() {
@@ -76,6 +95,7 @@ public class ClaimData {
     }
 
     private void read() {
+        //TODO: Check GP Version and use their metadata store when available.
         String sourcefile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";
         File getf = new File(sourcefile);
         if (getf.exists()) {
@@ -95,6 +115,7 @@ public class ClaimData {
     }
 
     private void save() {
+        //TODO: Check GP Version and use their metadata store when available.
         // persist to a file.
         // we will save to ClaimDataFolder, within a file <claimID>.dat
         String targetfile = ClaimDataFolder + File.separator + String.valueOf(ClaimID) + ".dat";

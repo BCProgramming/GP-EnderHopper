@@ -11,20 +11,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class GPEnderHopper extends JavaPlugin {
 
-    GriefPrevention gp = null;
+    public static GriefPrevention gp = null;
+    public static BetterEnderChest becPlugin = null;
+    public static Logger log;
+    public static GPEnderHopper self;
+    public Configuration config;
     HopperHandler hh = null;
     HopperCommand hc = null;
-    public BetterEnderChest becPlugin = null;
-    public Logger log;
-    public Configuration config;
 
     @Override
     public void onDisable() {
         ClaimData.closeAll();
+        becPlugin = null;
+        gp = null;
+        self = null;
     }
 
     @Override
     public void onEnable() {
+        self = this;
         log = getLogger();
         log.info("GPEnderHopper Loading...");
         try {
@@ -49,7 +54,7 @@ public class GPEnderHopper extends JavaPlugin {
         hh = new HopperHandler(this);
         Bukkit.getPluginManager().registerEvents(hh, this);
 
-        hc = new HopperCommand(this);
+        hc = new HopperCommand();
         getCommand("claimecpull").setExecutor(hc);
         getCommand("claimecpush").setExecutor(hc);
 
