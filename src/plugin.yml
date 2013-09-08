@@ -1,4 +1,4 @@
-name: GriefPrevention Ender Hoppers
+name: EnderHoppers
 main: com.BASeCamp.GPEnderHoppers.GPEnderHopper
 depends: GriefProtection
 softdepends: BetterEnderChest
@@ -10,3 +10,7 @@ commands:
    claimecpush:
       description: Toggle Enderchest Push capability in the current claim. (Put items in an EnderChest)
       permission: EnderHoppers.Manipulate
+permissions:
+  EmderHoppers.Manipulate:
+    description: Allows players to toggle Ender Hoppers for the current claim.
+    default: true

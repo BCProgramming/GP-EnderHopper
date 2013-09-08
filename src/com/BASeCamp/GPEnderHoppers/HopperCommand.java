@@ -15,14 +15,14 @@ import org.bukkit.entity.Player;
 public class HopperCommand implements CommandExecutor {
 
     @Override
-    public boolean onCommand(CommandSender arg0, Command arg1, String arg2, String[] arg3) {
+    public boolean onCommand(CommandSender sender, Command command, String name, String[] args) {
         // TODO Auto-generated method stub
-        if (!(arg0 instanceof Player))
+        if (!(sender instanceof Player))
             return false;
-        Player p = (Player) arg0;
+        Player p = (Player) sender;
         Claim inclaim = GPEnderHopper.gp.dataStore.getClaimAt(p.getLocation(), true, null);
 
-        if (arg2.equalsIgnoreCase("claimecpull") || (arg2.equalsIgnoreCase("claimecpush"))) {
+        if (name.equalsIgnoreCase("claimecpull") || (name.equalsIgnoreCase("claimecpush"))) {
             if (inclaim == null) {
                 p.sendMessage(ChatColor.RED + " You must be inside a claim to change it!");
                 return false;
@@ -47,10 +47,10 @@ public class HopperCommand implements CommandExecutor {
             // checks out, toggle appropriate perm.
             // retrieve the claim Data.
             ClaimData cd = ClaimData.getClaimData(inclaim.getID());
-            if (arg2.equalsIgnoreCase("claimecpull")) {
+            if (name.equalsIgnoreCase("claimecpull")) {
                 cd.setHopperPull(!cd.getHopperPull());
                 p.sendMessage("Hopper Enderchest Pull:" + (cd.getHopperPull() ? "On" : "Off"));
-            } else if (arg2.equalsIgnoreCase("claimecpush")) {
+            } else if (name.equalsIgnoreCase("claimecpush")) {
                 cd.setHopperPush(!cd.getHopperPush());
                 p.sendMessage("Hopper Enderchest Push:" + (cd.getHopperPush() ? "On" : "Off"));
             }
