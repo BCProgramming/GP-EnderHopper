@@ -26,6 +26,7 @@ public class HopperHandler implements Listener, Runnable {
         return Owner;
     }
 
+
     public HopperHandler(GPEnderHopper pOwner) {
         Owner = pOwner;
         //Run this a tick later so that the dataStore is populated.
@@ -93,6 +94,7 @@ public class HopperHandler implements Listener, Runnable {
             if (te instanceof Hopper) addHopper((Hopper) te);
         }
     }
+
 
     @EventHandler
     public void OnChunkLoad(ChunkLoadEvent ev) {

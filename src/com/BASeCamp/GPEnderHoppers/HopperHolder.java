@@ -30,6 +30,7 @@ public class HopperHolder {
             hoppers.put(hopper, new HopperHolder(hopper, ClaimData.getClaimData(claim)));
         }
         return hoppers.get(hopper);
+        
     }
     Block in,out;
     Hopper hop;
