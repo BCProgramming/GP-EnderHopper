@@ -127,6 +127,7 @@ public class HopperHolder {
     void completeMove(Inventory invent, boolean direction) {
         debug("Got inventory");
         Inventory hopper = hop.getInventory();
+        if(hopper==null) return;
         //This is now always thread-safe and in the bukkit thread.
         if(direction == false) {//input
             if(hopper.firstEmpty() == -1) {//Only need to check for these 5!

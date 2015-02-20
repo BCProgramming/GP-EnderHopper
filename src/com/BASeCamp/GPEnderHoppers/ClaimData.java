@@ -137,12 +137,15 @@ public class ClaimData {
     }
 
     private void read() {
-        if(useMeta) {
+    	//useMeta was removed from GP, since all my revisions were rolled back.
+    	//I actually had an unrelated idea to make my own from scratch- probably bringing over terminology from my work like site and sublet... but other
+    	//than bringing a bunch of Marina stuff (reservations? haha) over, I doubt it would actually be very useful for server admin tasks.
+        /*if(useMeta) {
             FileConfiguration conf = GPEnderHopper.gp.getMetaHandler().getClaimMeta("EnderHopper", getClaim());
             HopperPush = conf.getBoolean("EnderHopper.Push", false);
             HopperPull = conf.getBoolean("EnderHopper.Pull", false);
             return;
-        }
+        }*/
         File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
         if (getf.exists()) {
             try {
@@ -161,13 +164,14 @@ public class ClaimData {
     }
 
     private void save() {
-        if(useMeta) {
+    	//useMeta no longer supported in recent GP versions, which rolled back to.. what was it? 7.8.
+        /*if(useMeta) {
             YamlConfiguration conf = new YamlConfiguration();
             conf.set("EnderHopper.Push", HopperPush);
             conf.set("EnderHopper.Pull", HopperPull);
             GPEnderHopper.gp.getMetaHandler().setClaimMeta("EnderHopper", getClaim(), conf);
             return;
-        }
+        }*/
         // persist to a file.
         // we will save to ClaimDataFolder, within a file <claimID>.dat
         File getf = new File(claimFolder, String.valueOf(ClaimID) + ".dat");
